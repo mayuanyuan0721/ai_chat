@@ -13,7 +13,7 @@ export default function Messages({role,content}:MessageProps){
     }`;
      {/* 头像 */}
     const avatarClass=`${styles.avatar}${
-        isUser?styles.avatarUser:styles.avatarAssistant
+        isUser? styles.avatarUser:styles.avatarAssistant
     }`;
       {/* 气泡 */}
     const bubbleClass=`${styles.bubble} ${

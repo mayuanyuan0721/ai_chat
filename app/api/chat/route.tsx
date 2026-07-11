@@ -1,9 +1,60 @@
-// app/api/chat/route.tsx
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import https from 'https';
+import { streamText } from 'ai';
+import { createDeepSeek } from '@ai-sdk/deepseek'; // 推荐用专用包
 
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const deepseek = createDeepSeek({
+  baseURL: 'https://api.deepseek.com/v1',
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  fetch: (url, options) => {
+    const agent = new https.Agent({
+      rejectUnauthorized: false,
+      secureProtocol: 'TLSv1_2_method',
+      ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-DSS-AES256-GCM-SHA384',
+      minVersion: 'TLSv1.2',
+      maxVersion: 'TLSv1.3',
+    });
+    return fetch(url, { ...options, agent } as any);
+  }
+});
 
+export async function POST(request: NextRequest) {
+  try {
+
+    const { messages } = await request.json();
+
+
+    const modelMessages = messages.map((msg:any)=>({
+      role:msg.role,
+      content:
+        msg.parts
+        ?.filter((p:any)=>p.type==="text")
+        .map((p:any)=>p.text)
+        .join("") || ""
+    }));
+
+
+    const result = await streamText({
+      model: deepseek('deepseek-v4-pro'),
+      messages:modelMessages,
+    });
+return result.toUIMessageStreamResponse({
+  originalMessages: messages,
+});
+  } catch(err){
+
+    console.error("流式接口出错:",err);
+
+    return new Response(
+      "流式处理失败",
+      {
+        status:500
+      }
+    );
+  }
+}
+
+/** 
 export async function POST(request: NextRequest) {
   console.log(' 收到请求');
 
@@ -80,4 +131,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}*/

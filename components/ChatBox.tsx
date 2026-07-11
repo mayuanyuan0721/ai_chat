@@ -1,8 +1,59 @@
 'use client';
- import React, { useState } from "react";  
- import styles from "@/css/page.module.css"
- import InputBox from "@/components/InputBox"
- import MessageList from './MessageList';
+
+import React, { useEffect } from "react";
+import styles from "@/css/page.module.css";
+import InputBox from "@/components/InputBox";
+import MessageList from "./MessageList";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+
+export default function ChatBox() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+    }),
+  });
+
+  const handleSend = (text: string) => {
+    if (!text.trim()) return;
+    sendMessage({ text });
+  };
+
+  const isLoading = status === "streaming" || status === "submitted";
+
+  const adaptedMessages = messages.map((m) => ({
+    id: m.id,
+    role: m.role === "system" ? "assistant" : (m.role as "user" | "assistant"),
+    content:
+      m.parts
+        ?.filter((p) => p.type === "text")
+        .map((p) => (p as { type: "text"; text: string }).text)
+        .join("") || "",
+  }));
+
+  useEffect(() => {
+    console.log("当前消息列表:", messages);
+  }, [messages]);
+
+  return (
+    <div className={styles.chatPage}>
+      <header className={styles.chatHeader}>
+        <h1>AI Assistant</h1>
+        <span>DeepSeek · Streaming Chat</span>
+      </header>
+
+      <main className={styles.messageArea}>
+        <MessageList messages={adaptedMessages} />
+      </main>
+
+      <footer className={styles.inputArea}>
+        <InputBox onSend={handleSend} disabled={isLoading} />
+      </footer>
+    </div>
+  );
+}
+
+/** 
 export default function chatBox(){
     const [messages2,setMessages]=useState<{
      id: number; role: 'user' | 'assistant'; content: string
@@ -31,7 +82,9 @@ export default function chatBox(){
             }
             setMessages((pre)=>[...pre,aiReply])
         },1500);
-    } */
+    } 
+
+    //
    const [isWaiting, setIsWaiting] = useState(false);
    const handleSent=async (text:string)=>{
     const newUserMsg={
@@ -87,3 +140,4 @@ export default function chatBox(){
         </div>
     )
 }
+*/
