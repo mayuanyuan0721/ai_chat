@@ -1,0 +1,89 @@
+'use client';
+ import React, { useState } from "react";  
+ import styles from "@/css/page.module.css"
+ import InputBox from "@/components/InputBox"
+ import MessageList from './MessageList';
+export default function chatBox(){
+    const [messages2,setMessages]=useState<{
+     id: number; role: 'user' | 'assistant'; content: string
+    }[]>([
+      {id:1,role:'user',content:'您好,今天天气怎么样'},
+    {id:2,role:'assistant',content:'您好!今天阳光明媚,适合外出活动'},
+    {id:3,role:'user',content:'那我要穿什么衣服'},
+    {id:4,role:'assistant',content:'建议穿轻薄的长袖,早晚温差大,可以带一件外套'},
+    ])
+
+   /**
+    * 模拟AI接口回复
+    *  const handleSent=(text:string)=>{
+        const newUserMsg={
+            id:Date.now(),
+            role:'user' as const,
+            content:text
+        };
+        setMessages((prev) => [...prev, newUserMsg]);
+        setTimeout(()=>{
+            const aiReply ={
+                id:Date.now()+1,
+                role:'assistant' as const,
+                content:`收到你的消息：「${text}」，我还在学习中，暂时只能这样回复。`,
+
+            }
+            setMessages((pre)=>[...pre,aiReply])
+        },1500);
+    } */
+   const [isWaiting, setIsWaiting] = useState(false);
+   const handleSent=async (text:string)=>{
+    const newUserMsg={
+         id:Date.now(),
+         role:'user' as const,
+         content:text
+    }
+    //做一个拼接，将用户说的话，立马加入在当前对话上去
+      setMessages((prev) => [...prev, newUserMsg]);
+      setIsWaiting(true)
+      try{
+        const respones=await fetch('/api/chat',{
+              method:'POST',
+        headers:{
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({message:text}),  
+        })
+        //解析deeoseek请求后返回的数据
+        const data =await respones.json();
+        if(!respones.ok){
+            throw new Error(data.error || '请求失败')
+        }
+        //做得是真正的AI回复的功能
+        const aiMsg={
+            id:Date.now()+1,
+                role:'assistant' as const,
+                content:data.reply,
+
+        };
+        setMessages((prev)=>[...prev,aiMsg])
+      }catch(error:any){
+        const errorMsg={
+            id:Date.now()+1,
+              role: 'assistant' as const,
+      content: `哎呀，出错了：${error.message || '请检查网络'}`,
+        };
+           setMessages((prev) => [...prev, errorMsg]);
+
+      }finally{
+          setIsWaiting(false);
+      }
+   }
+
+    return(
+        <div className={styles.container}>
+             <header className={styles.header}>
+               <h1 className={styles.title}>AI 助手</h1>
+               <p className={styles.subtitle}>随时为您服务</p>
+           </header>
+             <MessageList messages={messages2}/>
+             <InputBox onSend={handleSent} disabled={isWaiting} />
+        </div>
+    )
+}

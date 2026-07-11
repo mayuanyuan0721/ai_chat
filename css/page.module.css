@@ -154,7 +154,7 @@
     transition: background-color 0.15s;
 }
 
-.sentButton::hover{
+.sentButton:hover{
       background-color: #2563eb;
 }
 .sendButton:active {
