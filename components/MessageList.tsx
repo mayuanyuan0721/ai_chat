@@ -1,5 +1,5 @@
 import styles from "@/css/page.module.css";
-
+import Markdown from "react-markdown";
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -8,8 +8,10 @@ interface Message {
 
 export default function MessageList({
   messages,
+  isThinking
 }: {
   messages: Message[];
+  isThinking:boolean;
 }) {
   return (
     <div className={styles.messages}>
@@ -27,8 +29,17 @@ export default function MessageList({
           </div>
 
           <div className={styles.content}>
+            <Markdown>
             {msg.content}
+            </Markdown>
           </div>
+          {
+            isThinking&&(
+              <div>
+                 AI正在思考...
+              </div>
+            )
+          }
         </div>
       ))}
     </div>

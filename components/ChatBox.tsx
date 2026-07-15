@@ -1,25 +1,59 @@
 'use client';
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "@/css/page.module.css";
 import InputBox from "@/components/InputBox";
 import MessageList from "./MessageList";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { json } from "node:stream/consumers";
 
 export default function ChatBox() {
+  const [conversationId, setConversationId] = useState(
+    () => crypto.randomUUID());
+
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
+      fetch: async (url, options) => {
+        let body = {};
+        //这个叫可选链
+        if (options?.body) {
+          body = JSON.parse(
+            options.body as string
+          );
+        }
+        return fetch(url, {
+          ...options,
+          body: JSON.stringify({
+            ...body,
+            conversationId
+          })
+        })
+      }
     }),
   });
+
+  useEffect(() => {
+    setConversationId(conversationId);
+    fetch("/api/conversation", {
+      method: "POST",
+      body: JSON.stringify({
+        id: conversationId
+      })
+
+    })
+  }, [conversationId])
 
   const handleSend = (text: string) => {
     if (!text.trim()) return;
     sendMessage({ text });
   };
-
+  //isLoading  控制输入框  isThinking 控制提示
+  //status有三个状态，第一个状态是subimit刚发送，streaming：DeepSeek开始返回，submitted返回完毕
   const isLoading = status === "streaming" || status === "submitted";
+
+  const isThinking = status === "submitted";
 
   const adaptedMessages = messages.map((m) => ({
     id: m.id,
@@ -43,7 +77,7 @@ export default function ChatBox() {
       </header>
 
       <main className={styles.messageArea}>
-        <MessageList messages={adaptedMessages} />
+        <MessageList messages={adaptedMessages} isThinking={isThinking} />
       </main>
 
       <footer className={styles.inputArea}>

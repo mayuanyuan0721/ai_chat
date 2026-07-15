@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import https from 'https';
 import { streamText } from 'ai';
 import { createDeepSeek } from '@ai-sdk/deepseek'; // 推荐用专用包
+import { supabase } from '@/lib/supabase/client';
+
 
 const deepseek = createDeepSeek({
   baseURL: 'https://api.deepseek.com/v1',
@@ -21,34 +23,89 @@ const deepseek = createDeepSeek({
 export async function POST(request: NextRequest) {
   try {
 
-    const { messages } = await request.json();
-
-
-    const modelMessages = messages.map((msg:any)=>({
-      role:msg.role,
+    const { messages, conversationId } = await request.json();
+    console.log(
+      JSON.stringify(conversationId)
+    );
+    //这个是给AI模型用的数据处理
+    const modelMessages = messages.map((msg: any) => ({
+      role: msg.role,
       content:
         msg.parts
-        ?.filter((p:any)=>p.type==="text")
-        .map((p:any)=>p.text)
-        .join("") || ""
+          ?.filter((p: any) => p.type === "text")
+          .map((p: any) => p.text)
+          .join("") || ""
     }));
+    const lastMessage = messages[messages.length - 1];
 
+    //这个是给数据库用的数据处理
+    /**const userText =modelMessages[modelMessages.length-1].content;
+     */
+    const userText = lastMessage.parts.filter(
+      (p: any) => p.type === 'text'
+    ).map(
+      (p: any) => p.text
+    ).join("")
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("id", conversationId)
+      .single();
+    if (!conversation) {
+      await supabase
+        .from("conversations")
+        .insert({
+          id: conversationId,
+          title: "AI聊天"
+        });
+    }
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        role: "user",
+        content: userText
+      });
+    if (error) {
+      console.error(
+        "保存消息失败:***",
+        error
+      );
+    }
+    else {
+      console.log(
+        "保存成功****",
+        data
+      );
+
+    }
 
     const result = await streamText({
       model: deepseek('deepseek-v4-pro'),
-      messages:modelMessages,
+      messages: modelMessages,
+      onFinish: async ({ text }) => {
+        await supabase
+          .from("messages")
+          .insert({
+            conversation_id:
+              conversationId,
+            role: "assistant",
+            content: text
+          });
+      }
     });
-return result.toUIMessageStreamResponse({
-  originalMessages: messages,
-});
-  } catch(err){
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+    });
+  } catch (err) {
 
-    console.error("流式接口出错:",err);
+    console.error("流式接口出错:", err);
 
     return new Response(
       "流式处理失败",
       {
-        status:500
+        status: 500
       }
     );
   }
