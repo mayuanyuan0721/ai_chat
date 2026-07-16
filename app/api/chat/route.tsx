@@ -81,10 +81,14 @@ export async function POST(request: NextRequest) {
 
     }
 
-    const result = await streamText({
-      model: deepseek('deepseek-v4-pro'),
+    const result =  streamText({
+      model: deepseek('deepseek-chat'),
       messages: modelMessages,
       onFinish: async ({ text }) => {
+         console.log(
+      "AI生成内容:",
+      text
+    );
         await supabase
           .from("messages")
           .insert({
@@ -95,9 +99,7 @@ export async function POST(request: NextRequest) {
           });
       }
     });
-    return result.toUIMessageStreamResponse({
-      originalMessages: messages,
-    });
+    return result.toUIMessageStreamResponse();
   } catch (err) {
 
     console.error("流式接口出错:", err);

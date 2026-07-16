@@ -6,13 +6,16 @@ import InputBox from "@/components/InputBox";
 import MessageList from "./MessageList";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { json } from "node:stream/consumers";
 
-export default function ChatBox() {
-  const [conversationId, setConversationId] = useState(
-    () => crypto.randomUUID());
+interface Props {
+  conversationId: string;
+}
 
-  const { messages, sendMessage, status } = useChat({
+
+export default function ChatBox({ conversationId }: Props) {
+
+  const { messages, sendMessage, status,setMessages } = useChat({
+    id: conversationId,
     transport: new DefaultChatTransport({
       api: "/api/chat",
       fetch: async (url, options) => {
@@ -34,16 +37,50 @@ export default function ChatBox() {
     }),
   });
 
-  useEffect(() => {
-    setConversationId(conversationId);
-    fetch("/api/conversation", {
-      method: "POST",
-      body: JSON.stringify({
-        id: conversationId
-      })
+   useEffect(()=>{
+    async function loadHistory(){
+      if(!conversationId){
+        return;
+      }
+      try{
+        const res = await fetch(
+          `/api/messages?conversationId=${conversationId}`
+        );
+        const data = await res.json();
+        console.log(
+          "后端返回历史:",
+          data
+        );
+        const history =
+          (data.messages ?? [])
+          .map((msg:any)=>({
+            id:
+            `${conversationId}-${msg.id}`,
+            role:
+            msg.role,
+            parts:[
+              {
+                type:"text",
+                text:msg.content
+              }
+            ]
+          }));
+        console.log(
+          "转换后的历史:",
+          history
+        );
 
-    })
-  }, [conversationId])
+        setMessages(history);
+      }catch(error){
+        console.error(
+          "加载历史失败:",
+          error
+        );
+
+      }
+    }
+    loadHistory();
+  },[conversationId,setMessages]);
 
   const handleSend = (text: string) => {
     if (!text.trim()) return;
