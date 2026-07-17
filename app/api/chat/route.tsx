@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import https from 'https';
-import { streamText } from 'ai';
+import { streamText,generateText  } from 'ai';
 import { createDeepSeek } from '@ai-sdk/deepseek'; // 推荐用专用包
 import { supabase } from '@/lib/supabase/client';
+import { log } from 'console';
 
 
 const deepseek = createDeepSeek({
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     ).join("")
     const { data: conversation } = await supabase
       .from("conversations")
-      .select("id")
+      .select("id,title")
       .eq("id", conversationId)
       .single();
     if (!conversation) {
@@ -85,10 +86,6 @@ export async function POST(request: NextRequest) {
       model: deepseek('deepseek-chat'),
       messages: modelMessages,
       onFinish: async ({ text }) => {
-         console.log(
-      "AI生成内容:",
-      text
-    );
         await supabase
           .from("messages")
           .insert({
@@ -97,6 +94,33 @@ export async function POST(request: NextRequest) {
             role: "assistant",
             content: text
           });
+           if(!conversationId){
+            return ;
+          }
+          const {data:conversation,error}=await supabase
+          .from("conversations")
+          .select("title")
+          .eq("id",conversationId)
+          .single()
+         if(conversation?.title=== "AI聊天"){
+          const titlePrompt = `
+          请根据下面这段聊天内容生成一个简洁的聊天标题。
+          要求：
+          1. 不超过10个字
+          2. 不要加引号
+          3. 不要加句号
+          4. 直接输出标题
+          聊天内容：
+          ${userText}`;
+           const titleResult=await generateText({
+            model: deepseek("deepseek-chat"),
+             prompt: titlePrompt
+         })
+        const {data:updateData,error:updateError}= await supabase
+         .from("conversations")
+         .update({title:titleResult.text.trim()})
+         .eq("id",conversationId);
+         }
       }
     });
     return result.toUIMessageStreamResponse();

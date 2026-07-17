@@ -33,15 +33,17 @@ export default function MessageList({
             {msg.content}
             </Markdown>
           </div>
-          {
+        
+        </div>
+      ))}
+
+        {
             isThinking&&(
               <div>
                  AI正在思考...
               </div>
             )
           }
-        </div>
-      ))}
     </div>
   );
 }

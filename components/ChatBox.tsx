@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useState } from "react";
 import styles from "@/css/page.module.css";
 import InputBox from "@/components/InputBox";
@@ -9,16 +8,25 @@ import { DefaultChatTransport } from "ai";
 
 interface Props {
   conversationId: string;
+  onTitleUpdate:()=>void
 }
 
 
-export default function ChatBox({ conversationId }: Props) {
-
+export default function ChatBox({ conversationId,onTitleUpdate }: Props) {
+  const [titleUpdated,setTitleUpdated]=useState(false);
   const { messages, sendMessage, status,setMessages } = useChat({
+    
     id: conversationId,
+     onFinish(){
+    console.log(
+      "AI完成"
+    );
+    onTitleUpdate();
+ },
     transport: new DefaultChatTransport({
       api: "/api/chat",
       fetch: async (url, options) => {
+        console.log("发送时 conversationId:", conversationId);
         let body = {};
         //这个叫可选链
         if (options?.body) {
@@ -47,10 +55,7 @@ export default function ChatBox({ conversationId }: Props) {
           `/api/messages?conversationId=${conversationId}`
         );
         const data = await res.json();
-        console.log(
-          "后端返回历史:",
-          data
-        );
+       
         const history =
           (data.messages ?? [])
           .map((msg:any)=>({
@@ -65,18 +70,12 @@ export default function ChatBox({ conversationId }: Props) {
               }
             ]
           }));
-        console.log(
-          "转换后的历史:",
-          history
-        );
-
         setMessages(history);
       }catch(error){
         console.error(
           "加载历史失败:",
           error
         );
-
       }
     }
     loadHistory();
@@ -89,8 +88,10 @@ export default function ChatBox({ conversationId }: Props) {
   //isLoading  控制输入框  isThinking 控制提示
   //status有三个状态，第一个状态是subimit刚发送，streaming：DeepSeek开始返回，submitted返回完毕
   const isLoading = status === "streaming" || status === "submitted";
-
-  const isThinking = status === "submitted";
+const showThinking =
+ status === "submitted" &&
+ messages.length > 0 &&
+ messages[messages.length-1].role === "user";
 
   const adaptedMessages = messages.map((m) => ({
     id: m.id,
@@ -101,10 +102,7 @@ export default function ChatBox({ conversationId }: Props) {
         .map((p) => (p as { type: "text"; text: string }).text)
         .join("") || "",
   }));
-
-  useEffect(() => {
-    console.log("当前消息列表:", messages);
-  }, [messages]);
+   
 
   return (
     <div className={styles.chatPage}>
@@ -114,7 +112,7 @@ export default function ChatBox({ conversationId }: Props) {
       </header>
 
       <main className={styles.messageArea}>
-        <MessageList messages={adaptedMessages} isThinking={isThinking} />
+        <MessageList messages={adaptedMessages} isThinking={showThinking}/>
       </main>
 
       <footer className={styles.inputArea}>
