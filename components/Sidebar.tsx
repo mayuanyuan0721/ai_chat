@@ -13,15 +13,18 @@ interface Props{
     onSelectConversation:(id:string)=>void;
     activeId:string;
     refresh:number;
-    onDeleteConversation:(id:string)=>void
+    onDeleteConversation:(id:string)=>void;
+    isLogin:boolean
 }
 
 
-export default function Sidebar({onSelectConversation,activeId,onDeleteConversation,refresh}:Props){
+export default function Sidebar({onSelectConversation,activeId,onDeleteConversation,refresh,isLogin}:Props){
     const [conversations,setConversations]=useState<Conversation[]>([]);
-    
       const [loading, setLoading] = useState(true);
      useEffect(() => {
+        if(!isLogin){
+            return ;
+        }
     fetch("/api/conversations")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
@@ -38,13 +41,17 @@ export default function Sidebar({onSelectConversation,activeId,onDeleteConversat
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, [refresh]);
+  }, [refresh,isLogin]);
 
 
     return(
         <div className={styles.sidebar}>
          <h2>历史记录</h2>
             <button className={styles.newChat} onClick={()=>{
+            if(!isLogin){
+                 alert("请先登录");
+                 return;
+            }
             const id=crypto.randomUUID();
              onSelectConversation(id);}}>
                 +

@@ -8,12 +8,13 @@ import { DefaultChatTransport } from "ai";
 
 interface Props {
   conversationId: string;
-  onTitleUpdate:()=>void
+  onTitleUpdate:()=>void;
+  onLogin:()=>void;
+  outLogout:()=>void;
+  user:any
 }
-
-
-export default function ChatBox({ conversationId,onTitleUpdate }: Props) {
-  const [titleUpdated,setTitleUpdated]=useState(false);
+  
+export default function ChatBox({ conversationId,onTitleUpdate,onLogin,outLogout,user }: Props) {
   const { messages, sendMessage, status,setMessages } = useChat({
     
     id: conversationId,
@@ -87,8 +88,8 @@ export default function ChatBox({ conversationId,onTitleUpdate }: Props) {
   };
   //isLoading  控制输入框  isThinking 控制提示
   //status有三个状态，第一个状态是subimit刚发送，streaming：DeepSeek开始返回，submitted返回完毕
-  const isLoading = status === "streaming" || status === "submitted";
-const showThinking =
+ const isLoading = status === "streaming" || status === "submitted";
+ const showThinking =
  status === "submitted" &&
  messages.length > 0 &&
  messages[messages.length-1].role === "user";
@@ -109,6 +110,39 @@ const showThinking =
       <header className={styles.chatHeader}>
         <h1>AI Assistant</h1>
         <span>DeepSeek · Streaming Chat</span>
+  
+<div className={styles.headerRight}>
+
+{
+  user ?
+  <button 
+    className={styles.logoutButton}
+    onClick={outLogout}
+  >
+    退出登录
+  </button>
+  :
+  <button 
+    className={styles.loginButton}
+    onClick={onLogin}
+  >
+    登录
+  </button>
+}
+
+{
+  user &&
+  <div className={styles.userInfo}>
+    <span className={styles.userIcon}>
+      👤
+    </span>
+    <span>
+      {user.email}
+    </span>
+  </div>
+}
+
+</div>
       </header>
 
       <main className={styles.messageArea}>

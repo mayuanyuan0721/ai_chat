@@ -11,7 +11,8 @@
   "dependencies": {
     "@ai-sdk/deepseek": "^3.0.7",
     "@ai-sdk/react": "^4.0.23",
-    "@supabase/supabase-js": "^2.110.3",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.7",
     "ai": "^7.0.22",
     "axios": "^1.18.1",
     "json5": "^2.2.3",
