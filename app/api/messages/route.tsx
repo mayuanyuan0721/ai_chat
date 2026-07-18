@@ -1,6 +1,10 @@
-import { supabase } from "@/lib/supabase/client";
+import {createClient} from "@/lib/supabase/server"
 import { NextRequest } from "next/server";
+
+
 export async function GET(req:NextRequest) {
+ const supabase=await createClient();
+
     const conversationId=req.nextUrl.searchParams.get('conversationId');
     if(!conversationId){
         return Response.json({error:"Missing conversationId"})
@@ -13,7 +17,6 @@ export async function GET(req:NextRequest) {
         if(error){
             return Response.json({error:error.message}, { status: 500 })
         }
-        console.log("******");
         
     return Response.json({
         messages:data

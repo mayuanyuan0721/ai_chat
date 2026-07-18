@@ -86,3 +86,113 @@
   display:flex;
   justify-content:center;
 }
+
+.chatHeader {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  border-bottom: 1px solid #eee;
+  background: white;
+}
+
+
+.chatHeader h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+
+.chatHeader span {
+  color: #888;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.loginButton {
+
+  padding: 8px 20px;
+
+  border-radius: 20px;
+
+  border: none;
+
+  background: #2563eb;
+
+  color:white;
+
+  font-size:14px;
+
+  cursor:pointer;
+
+  transition:all 0.2s;
+
+}
+
+
+.loginButton:hover {
+
+  background:#1d4ed8;
+
+  transform:translateY(-1px);
+
+}
+
+.logoutButton {
+
+  padding:8px 20px;
+
+  border-radius:20px;
+
+  border:1px solid #ef4444;
+
+  background:white;
+
+  color:#ef4444;
+
+  font-size:14px;
+
+  cursor:pointer;
+
+  transition:all 0.2s;
+
+}
+
+
+.logoutButton:hover {
+
+  background:#ef4444;
+
+  color:white;
+
+}
+.userInfo {
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  padding:6px 12px;
+
+  border-radius:20px;
+
+  background:#f1f5f9;
+
+  color:#475569;
+
+  font-size:14px;
+
+}
+
+
+.userIcon {
+
+  font-size:16px;
+
+}

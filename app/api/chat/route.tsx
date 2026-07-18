@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import https from 'https';
 import { streamText,generateText  } from 'ai';
 import { createDeepSeek } from '@ai-sdk/deepseek'; // 推荐用专用包
-import { supabase } from '@/lib/supabase/client';
+import {createClient} from "@/lib/supabase/server"
 import { log } from 'console';
 
 
@@ -21,9 +21,20 @@ const deepseek = createDeepSeek({
   }
 });
 
-export async function POST(request: NextRequest) {
-  try {
 
+
+export async function POST(request: NextRequest) {
+ const supabase=await createClient();
+const {data:{user},error}=await supabase.auth.getUser();
+if(!user){
+ return new Response(
+   "未登录",
+   {
+    status:401
+   }
+ )
+}
+  try {
     const { messages, conversationId } = await request.json();
     console.log(
       JSON.stringify(conversationId)
@@ -57,7 +68,8 @@ export async function POST(request: NextRequest) {
         .from("conversations")
         .insert({
           id: conversationId,
-          title: "AI聊天"
+          title: "AI聊天",
+          user_id:user?.id
         });
     }
 
@@ -136,6 +148,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 
 /** 
 export async function POST(request: NextRequest) {
