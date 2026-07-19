@@ -30,7 +30,7 @@ export default function AuthModal({ onClose }: Props) {
         );
         const data = await res.json();
         if (!res.ok) {
-            alert(data.error);
+            alert("登录失败，请输入正确的邮箱和密码");
         } else {
             alert("登录成功");
             window.location.reload();
@@ -57,6 +57,13 @@ export default function AuthModal({ onClose }: Props) {
 
     }
 
+    //做了一个重置清空
+    const changeMode=(newMode: "login" | "register")=>{
+        setMode(newMode);
+        setEmail("");
+        setPassword("");
+        
+    }
     return (
         <div className={styles.overlay}>
             <div className={styles.modal}>
@@ -78,14 +85,14 @@ export default function AuthModal({ onClose }: Props) {
                         ?
                         <p>
                             没有账号？
-                            <button onClick={() => setMode("register")} >
+                            <button onClick={() => changeMode("register")} >
                                 注册
                             </button>
                         </p>
                         :
                         <p>
                             已有账号？
-                            <button onClick={() => setMode("login")}>
+                            <button onClick={() => changeMode("login")}>
                                 登录
                             </button>
                         </p>

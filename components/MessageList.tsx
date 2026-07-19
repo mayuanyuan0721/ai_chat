@@ -1,5 +1,6 @@
 import styles from "@/css/page.module.css";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -29,14 +30,13 @@ export default function MessageList({
           </div>
 
           <div className={styles.content}>
-            <Markdown>
+            <Markdown remarkPlugins={[remarkGfm]}  >
             {msg.content}
             </Markdown>
           </div>
         
         </div>
       ))}
-
         {
             isThinking&&(
               <div>

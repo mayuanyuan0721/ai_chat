@@ -14,11 +14,10 @@ export default function ChatLayout() {
    async function handleLogout() {
         const res = await fetch("/api/auth/layout",{
     method:"POST",
-  });
+      });
       if(res.ok){
         alert("退出成功");
         setUser(null);
-         window.location.reload();
       }
     }
   useEffect(() => {
@@ -49,7 +48,7 @@ export default function ChatLayout() {
       display: "flex"
     }}>
       <Sidebar
-        isLogin={checked}
+        isLogin={!!user}
         refresh={refresh}
         onDeleteConversation={
           async (id) => {
